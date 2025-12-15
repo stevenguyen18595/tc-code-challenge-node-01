@@ -16,10 +16,25 @@ const generateRandomUsers = (count: number) => {
   const firstNames = ['John', 'Jane', 'Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack', 'Kate', 'Liam', 'Mia', 'Noah', 'Olivia', 'Paul', 'Quinn', 'Rose', 'Sam', 'Tina', 'Uma', 'Victor', 'Wendy', 'Xavier', 'Yara', 'Zoe']
   const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson']
   
+  // Generate all possible combinations
+  const allCombinations = []
+  for (const firstName of firstNames) {
+    for (const lastName of lastNames) {
+      allCombinations.push({ firstName, lastName })
+    }
+  }
+  
+  // Shuffle the combinations to get random order
+  for (let i = allCombinations.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[allCombinations[i], allCombinations[j]] = [allCombinations[j], allCombinations[i]]
+  }
+  
+  // Take the first 'count' combinations to ensure uniqueness
+  // We dont want more users than unique combinations so count needs to be capped
   const users = []
-  for (let i = 0; i < count; i++) {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)]
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)]
+  for (let i = 0; i < Math.min(count, allCombinations.length); i++) {
+    const { firstName, lastName } = allCombinations[i]
     const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@example.com`
     
     users.push({

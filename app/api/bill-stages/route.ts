@@ -3,19 +3,17 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const users = await prisma.user.findMany({
-      include: {
-        bills: true,
-      },
+    const billStages = await prisma.billStage.findMany({
       orderBy: {
-        createdAt: "desc",
+        createdAt: "asc",
       },
     });
 
-    return NextResponse.json(users);
+    return NextResponse.json(billStages);
   } catch (error) {
+    console.error("Error fetching bill stages:", error);
     return NextResponse.json(
-      { error: "Failed to fetch users" },
+      { error: "Failed to fetch bill stages" },
       { status: 500 },
     );
   }
