@@ -1,14 +1,29 @@
-import { describe, it, expect, beforeEach, afterAll } from "vitest";
-import { disconnectTestDB, setupTestDB, testPrisma, loadRoute } from "../setup";
+import { describe, it, expect, beforeEach, afterAll, beforeAll } from "vitest";
+import {
+  disconnectTestDB,
+  setupTestDB,
+  testPrisma,
+  loadRoute,
+  resetTestDB,
+  seedTestData,
+} from "../setup";
 import { NextRequest } from "next/server";
 
 let POST: (req: NextRequest) => Promise<Response>;
 
 describe("/api/bills/assign (In-Memory DB)", () => {
-  beforeEach(async () => {
+  beforeAll(async () => {
     await setupTestDB();
     const routes = await loadRoute("../../app/api/bills/assign/route");
     POST = routes.POST!;
+  });
+
+  beforeEach(async () => {
+    // Reset DB state and seed for a clean test run
+    await resetTestDB();
+    console.log("[test-setup] starting seedTestData...");
+    await seedTestData();
+    console.log("[test-setup] setupTestDB: finished");
   });
 
   afterAll(async () => {

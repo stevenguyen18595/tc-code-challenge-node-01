@@ -192,12 +192,6 @@ export async function setupTestDB() {
       throw lastError;
     }
   }
-
-  // Reset DB state and seed for a clean test run
-  await resetTestDB();
-  console.log("[test-setup] starting seedTestData...");
-  await seedTestData();
-  console.log("[test-setup] setupTestDB: finished");
 }
 
 // Reset test DB by deleting records in the correct order.
@@ -212,7 +206,7 @@ export async function resetTestDB() {
   }
 }
 
-async function seedTestData() {
+export async function seedTestData() {
   console.log("Starting seed...");
 
   // Clear existing data
@@ -221,18 +215,15 @@ async function seedTestData() {
   await testPrisma.billStage.deleteMany();
   // Seed bill stages
   console.log("Seeding bill stages...");
-  const createdBillStages = await testPrisma.billStage.createManyAndReturn({
-    data: billStageData,
-  });
-
+  await testPrisma.billStage.createMany({ data: billStageData });
+  const createdBillStages = await testPrisma.billStage.findMany();
   console.log(`Created ${createdBillStages.length} bill stages`);
 
   // Seed users
   console.log("Seeding users...");
   const userData = generateRandomUsers(50);
-  const createdUsers = await testPrisma.user.createManyAndReturn({
-    data: userData,
-  });
+  await testPrisma.user.createMany({ data: userData });
+  const createdUsers = await testPrisma.user.findMany();
   console.log(`Created ${createdUsers.length} users`);
 
   // Seed bills
@@ -242,10 +233,10 @@ async function seedTestData() {
     createdUsers.map((u) => u.id),
     createdBillStages.map((bs) => bs.id),
   );
-  const createdBills = await testPrisma.bill.createMany({
-    data: billData,
-  });
-  console.log(`Created ${createdBills.count} bills`);
+  // Use createMany for bulk insert; ensure related IDs exist
+  await testPrisma.bill.createMany({ data: billData });
+  const createdBills = await testPrisma.bill.findMany();
+  console.log(`Created ${createdBills.length} bills`);
 
   console.log("Seeding completed successfully!");
 }
