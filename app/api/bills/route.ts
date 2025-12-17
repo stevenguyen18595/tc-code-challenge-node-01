@@ -40,9 +40,10 @@ export async function POST(request: Request) {
     const { billReference, billDate, assignedToId } = await request.json();
 
     // Basic validation
-    if (!billReference || !billDate || !assignedToId) {
+    // Allow unassigned bills - need to check ACs
+    if (!billReference || !billDate) {
       return NextResponse.json(
-        { error: "Bill reference, bill date, and assigned user are required" },
+        { error: "Bill reference and bill date are required" },
         { status: 400 },
       );
     }

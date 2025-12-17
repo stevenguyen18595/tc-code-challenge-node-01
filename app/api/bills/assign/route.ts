@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
       const unassignedBill = await prisma.bill.findFirst({
         where: {
-          assignedToId: { equals: null },
+          OR: [{ assignedToId: null }, { assignedToId: "" }],
           billStageId: submittedStage.id,
         },
         orderBy: { createdAt: "asc" },
