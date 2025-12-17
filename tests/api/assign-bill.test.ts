@@ -78,27 +78,6 @@ describe("/api/bills/assign (In-Memory DB)", () => {
     expect(json.assignedBill.assignedToId).toBe(user!.id);
   });
 
-  it("auto-assigns the oldest unassigned Submitted bill when billId not provided", async () => {
-    const user = (
-      await testPrisma.user.findMany({ include: { bills: true } })
-    ).find((u) => u.bills.length < 3);
-    expect(user).toBeTruthy();
-
-    const body = { userId: user!.id };
-    const req = new NextRequest("http://localhost/api/bills/assign", {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    const res = await POST(req);
-    const json = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(json.assignedBill).toBeTruthy();
-    expect(json.user.id).toBe(user!.id);
-  });
-
   it("returns 400 when userId is missing", async () => {
     const req = new NextRequest("http://localhost/api/bills/assign", {
       method: "POST",
@@ -113,10 +92,24 @@ describe("/api/bills/assign (In-Memory DB)", () => {
     expect(json.error).toBeTruthy();
   });
 
+  it("returns 400 when billId is missing", async () => {
+    const req = new NextRequest("http://localhost/api/bills/assign", {
+      method: "POST",
+      body: JSON.stringify({ userId: "some-user-id", billId: null }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toBeTruthy();
+  });
+
   it("returns 404 when user not found", async () => {
     const req = new NextRequest("http://localhost/api/bills/assign", {
       method: "POST",
-      body: JSON.stringify({ userId: "no-user", billId: null }),
+      body: JSON.stringify({ userId: "no-user", billId: 1 }),
       headers: { "Content-Type": "application/json" },
     });
 

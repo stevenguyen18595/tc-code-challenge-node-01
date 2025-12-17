@@ -6,9 +6,9 @@ export async function POST(request: Request) {
     const { userId, billId } = await request.json();
 
     // Basic validation
-    if (!userId) {
+    if (!userId || !billId) {
       return NextResponse.json(
-        { error: "User ID is required" },
+        { error: "User ID and Bill ID are required" },
         { status: 400 },
       );
     }
@@ -37,45 +37,9 @@ export async function POST(request: Request) {
       );
     }
 
-    let targetBillId: string;
-
-    if (billId) {
-      // Specific bill provided
-      targetBillId = billId;
-    } else {
-      // Auto-assign the oldest unassigned bill in "Submitted" stage. Also, need to check if this AC is met.
-      const submittedStage = await prisma.billStage.findFirst({
-        where: { label: "Submitted" },
-      });
-
-      if (!submittedStage) {
-        return NextResponse.json(
-          { error: "No 'Submitted' stage found" },
-          { status: 400 },
-        );
-      }
-
-      const unassignedBill = await prisma.bill.findFirst({
-        where: {
-          OR: [{ assignedToId: null }, { assignedToId: "" }],
-          billStageId: submittedStage.id,
-        },
-        orderBy: { createdAt: "asc" },
-      });
-
-      if (!unassignedBill) {
-        return NextResponse.json(
-          { error: "No unassigned bills available to assign" },
-          { status: 404 },
-        );
-      }
-
-      targetBillId = unassignedBill.id;
-    }
-
     // Verify the bill is unassigned and in submitted stage
     const billToAssign = await prisma.bill.findUnique({
-      where: { id: targetBillId },
+      where: { id: billId },
       include: {
         billStage: {
           select: { label: true },
@@ -103,7 +67,7 @@ export async function POST(request: Request) {
 
     // Assign the bill to the user
     const updatedBill = await prisma.bill.update({
-      where: { id: targetBillId },
+      where: { id: billId },
       data: { assignedToId: userId },
       include: {
         assignedTo: {
